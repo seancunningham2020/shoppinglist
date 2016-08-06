@@ -11,7 +11,6 @@ namespace shoppinglist.api.Controllers
 
         public ShoppingListController()
         {
-
         }
 
         public ShoppingListController(IShoppingListRepository shoppingListRepository)
