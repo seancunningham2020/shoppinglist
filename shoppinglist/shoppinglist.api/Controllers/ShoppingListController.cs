@@ -1,6 +1,7 @@
 ﻿using shoppinglist.api.Models;
 using shoppinglist.api.Repositories;
-using System.Collections.Generic;
+using System.Linq;
+using System.Net;
 using System.Web.Http;
 
 namespace shoppinglist.api.Controllers
@@ -17,35 +18,69 @@ namespace shoppinglist.api.Controllers
         {
             this.shoppingListRepository = shoppingListRepository;
         }
-        
-        // GET: api/ShoppingList
-        public IEnumerable<ProductModel> Get()
+
+        [HttpGet]
+        public IHttpActionResult Get()
         {
-            return shoppingListRepository.Get();
+            return Ok(shoppingListRepository.Get());
         }
 
-        // GET: api/ShoppingList/Name
-        public ProductModel Get(string name)
+        [HttpGet]
+        public IHttpActionResult Get(string name)
         {
-            return shoppingListRepository.Get(name);
+            var product = shoppingListRepository.Get(name);
+            if (product == null)
+            {
+                return Content(HttpStatusCode.NotFound, new { Message = "Not Found" });
+            }
+
+            return Ok(product);
         }
 
         // POST: api/ShoppingList
-        public void Post(ProductModel product)
+        [HttpPost]
+        public IHttpActionResult Post(ProductModel product)
         {
+            if (!ModelState.IsValid)
+            {
+                string messages = string.Join("; ", ModelState.Values
+                                        .SelectMany(x => x.Errors)
+                                        .Select(x => x.ErrorMessage));
+
+                return BadRequest(messages);
+            }
+
+            var existingProduct = shoppingListRepository.Get(product.Name);
+            if (existingProduct != null)
+            {
+                return BadRequest("This product already exists");
+            }
+
             shoppingListRepository.Add(product);
+
+            var updatedProduct = shoppingListRepository.Get(product.Name);
+
+            return Ok(updatedProduct);
         }
 
-        // PUT: api/ShoppingList/5
-        public void Put(ProductModel product)
+        public IHttpActionResult Put(ProductModel product)
         {
+            var existingProduct = shoppingListRepository.Get(product.Name);
+            if (existingProduct == null)
+            {
+                return Content(HttpStatusCode.NotFound, new { Message = "Not Found" });
+            }
+
             shoppingListRepository.Update(product);
+            return Ok(new { Message = "Ok" });
         }
 
-        // DELETE: api/ShoppingList/5
-        public void Delete(string name)
+        [HttpDelete]
+        public IHttpActionResult Delete(string name)
         {
             shoppingListRepository.Delete(name);
+
+            return Ok(new { Message = "Ok" });
         }
     }
 }
