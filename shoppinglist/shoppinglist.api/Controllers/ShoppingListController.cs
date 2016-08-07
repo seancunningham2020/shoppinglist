@@ -65,6 +65,15 @@ namespace shoppinglist.api.Controllers
 
         public IHttpActionResult Put(ProductModel product)
         {
+            if (!ModelState.IsValid)
+            {
+                string messages = string.Join("; ", ModelState.Values
+                                        .SelectMany(x => x.Errors)
+                                        .Select(x => x.ErrorMessage));
+
+                return BadRequest(messages);
+            }
+
             var existingProduct = shoppingListRepository.Get(product.Name);
             if (existingProduct == null)
             {
